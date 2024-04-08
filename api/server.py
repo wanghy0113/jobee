@@ -4,7 +4,8 @@ from job_analyst.sort_agent import JobSortAgent
 from job_crawl.params_agent.agent import CrawlingParamsAgent
 from job_crawl.indeed import CrawlParams, CrawlResult, IndeedCrawler
 import logging
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi.security import OAuth2PasswordBearer
 import uvicorn
 from pydantic import BaseModel
 from db.models import (
@@ -16,6 +17,10 @@ from db.models import (
     JobMatchResult,
 )
 import hashlib
+from typing import Annotated
+from jose import JWTError, jwt
+
+SECRET_KEY = "secret"
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -43,12 +48,44 @@ class MatchDreamJobRequest(BaseModel):
     new_jobs_only: bool = True
 
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 app = FastAPI()
+
+
+def get_user(email: str):
+    user = User.select().where(User.email == email).first()
+    return user.to_dict() if user else None
+
+
+def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        email: str = payload.get("email")  # type: ignore
+        if email is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    user = get_user(email)
+    if user is None:
+        raise credentials_exception
+    return user
 
 
 @app.get("/ping")
 def ping():
     return "pong"
+
+
+@app.get("/users/me/")
+async def read_users_me(
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    return current_user
 
 
 @app.post("/generate_crawling_params/")
@@ -69,7 +106,9 @@ def create_user(req: CreateUserRequest):
 
 
 @app.post("/dream_job")
-def create_dream_job(req: CreateDreamJobRequest):
+def create_dream_job(req: CreateDreamJobRequest, current_user: User = Depends(get_current_user)):
+    logging.debug(f"Current user: {current_user}")
+    logging.debug(f"Create dream job for user: {req}")
     dream_job: DreamJob = DreamJob.create(
         user_id=req.user_id,
         raw_description=req.description,
@@ -124,7 +163,7 @@ def crawl_jobs(params: CrawlingDreamJobsParams):
 
     for entry in crawl_entries:
         if entry.last_run_at:
-            if datetime.datetime.now().strftime("%Y%m%d") == entry.last_run_at.strftime( # type: ignore
+            if datetime.datetime.now().strftime("%Y%m%d") == entry.last_run_at.strftime(  # type: ignore
                 "%Y%m%d"
             ):
                 logging.debug(f"Skip crawling job for entry: {entry.get_id()}")
@@ -188,20 +227,24 @@ def match_dream_jobs(req: MatchDreamJobRequest):
         .join(DreamJobCrawlEntry)
         .where(DreamJobCrawlEntry.dream_job == req.dream_job_id)
     )
-    
-    logging.debug(f"Start matching dream job: {dream_job.get_id()} with {len(crawl_entries)} crawl entries")
-    
+
+    logging.debug(
+        f"Start matching dream job: {dream_job.get_id()} with {len(crawl_entries)} crawl entries"
+    )
+
     if not crawl_entries:
         raise HTTPException(status_code=400, detail="No job found for dream job")
     for crawl_entry in crawl_entries:
         crawl_results = JobCrawlResult.select().where(
-            JobCrawlResult.job_crawl_entry == crawl_entry and JobCrawlResult.updated_at > last_matched_at
+            JobCrawlResult.job_crawl_entry == crawl_entry
+            and JobCrawlResult.updated_at > last_matched_at
         )
         for crawl_result in crawl_results:
             match_job(dream_job, crawl_result)
-            
-    dream_job.last_matched_at = datetime.datetime.now() # type: ignore
+
+    dream_job.last_matched_at = datetime.datetime.now()  # type: ignore
     dream_job.save()
+
 
 def match_job(dream_job: DreamJob, job: JobCrawlResult):
     match_agent = JobMatchAgent()
