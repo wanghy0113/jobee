@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "api"
+version = "0.1.0"
+description = ""
+authors = ["wanghy0113 <henrywang0113@gmail.com>"]
+readme = "README.md"
+packages = [
+    { include = "job_crawl" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+playwright = "^1.42.0"
+fastapi = "^0.110.1"
+uvicorn = "^0.29.0"
+pydantic = "^2.6.4"
+langchain-core = "^0.1.38"
+langchain-community = "^0.0.31"
+langchain-openai = "^0.1.1"
+peewee = "^3.17.1"
+psycopg2 = "^2.9.9"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
