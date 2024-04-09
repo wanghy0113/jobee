@@ -98,6 +98,28 @@ class JobCrawlResult(BaseModel):
     benefits = ArrayField(TextField, null=True)  # type: ignore
     job_contents = ArrayField(TextField, null=True)  # type: ignore
 
+    def to_dict(self):
+        return {
+            "id": self.get_id(),
+            "job_crawl_entry_id": self.job_crawl_entry.get_id(),
+            "indeed_job_id": self.indeed_job_id,
+            "indeed_job_url": self.indeed_job_url,
+            "google_job_id": self.google_job_id,
+            "google_job_url": self.google_job_url,
+            "raw_content": self.raw_content,
+            "title": self.title,
+            "skills": self.skills,
+            "salary": self.salary,
+            "experience": self.experience,
+            "company": self.company,
+            "remote_ok": self.remote_ok,
+            "job_types": self.job_types,
+            "benefits": self.benefits,
+            "job_contents": self.job_contents,
+            "created_at": self.create_at,
+            "updated_at": self.updated_at,
+        }
+
     class Meta:
         db_table = "job_crawl_result"
 
@@ -110,6 +132,18 @@ class JobMatchResult(BaseModel):
 
     matching_points = ArrayField(TextField, null=True)  # type: ignore
     warning_points = ArrayField(TextField, null=True)  # type: ignore
+
+    def to_dict(self, populate_job_crawl_result=False):
+        res = {
+            "id": self.get_id(),
+            "dream_job_id": self.dream_job.get_id(),
+            "matching_points": self.matching_points,
+            "warning_points": self.warning_points,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+        }
+        if populate_job_crawl_result:
+            res["job_crawl_result"] = self.job_crawl_result.to_dict()
 
     class Meta:
         db_table = "job_match_result"

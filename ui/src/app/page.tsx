@@ -1,19 +1,20 @@
 import Image from "next/image";
+import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@/components/ui/button"
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <h1 className="text-4xl font-bold">Welcome to your Next.js app</h1>
-      <Image
-        src="/nextjs-logo.png"
-        alt="Next.js logo"
-        width={200}
-        height={200}
-        className="rounded-full"
-      />
-      <p className="text-lg text-center">
-        Get started by editing <code>pages/index.tsx</code>
-      </p>
+    <main className="flex min-h-screen flex-col items-center p-24 space-y-4">
+      <div className="flex flex-col w-full max-w-96">
+        <Textarea placeholder="Say something about you and your dream job" />
+        <Button className="mt-4">Submit</Button>
+      </div>
+      <div>
+        {/* Task logging */}
+        <p className="text-green-700">
+          Analyzing job description...
+        </p>
+      </div>
     </main>
   );
 }

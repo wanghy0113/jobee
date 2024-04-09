@@ -31,6 +31,7 @@ class GenerateCrawlingParamsRequest(BaseModel):
 
 class CrawlingDreamJobsParams(BaseModel):
     dream_job_id: int
+    enable_job_matching: bool = False
 
 
 class CreateUserRequest(BaseModel):
@@ -208,6 +209,8 @@ def crawl_jobs(params: CrawlingDreamJobsParams):
                     JobCrawlResult.job_contents: sort_result.job_contents,
                 },
             ).execute()
+            if params.enable_job_matching:
+                match_job(DreamJob.get_by_id(params.dream_job_id), JobCrawlResult.get_by_id(res.job_key))
 
         crawler.crawl(get_crawl_params(entry), agent_callback, {"max_num": 1})
         entry.last_run_at = datetime.datetime.now()  # type: ignore
@@ -266,6 +269,10 @@ def match_job(dream_job: DreamJob, job: JobCrawlResult):
         },
     ).execute()
 
+@app.get("/job_match_results")
+def get_job_match_results(dream_job_id: int):
+    results = JobMatchResult.select().where(JobMatchResult.dream_job == dream_job_id)
+    return [result.to_dict() for result in results]
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
