@@ -1,8 +1,6 @@
 # Use an official Python runtime as a parent image
 FROM python:3.11
 
-ENV OPENAI_API_KEY=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
-
 # Set the working directory in the container
 WORKDIR /usr/src/app
 
