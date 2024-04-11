@@ -10,7 +10,11 @@ from peewee import (
 )
 from playhouse.postgres_ext import PostgresqlExtDatabase, ArrayField
 import datetime
+import logging
 
+
+logger = logging.getLogger('peewee')
+logger.setLevel(logging.WARNING)
 # Connect to a Postgres database.
 db = PostgresqlExtDatabase(
     "jobee_dev", user="jobee_dev", password="319298", host="localhost", port=5432
@@ -61,6 +65,15 @@ class DreamJob(BaseModel):
     created_at = DateTimeField(default=datetime.datetime.now)
     last_matched_at = DateTimeField(null=True)
 
+    def to_dict(self):
+        return {
+            "id": self.get_id(),
+            "user_id": self.user.get_id(),
+            "raw_description": self.raw_description,
+            "created_at": self.created_at,
+            "last_matched_at": self.last_matched_at,
+        }
+
     class Meta:
         db_table = "dream_job"
 
@@ -98,15 +111,14 @@ class JobCrawlResult(BaseModel):
     benefits = ArrayField(TextField, null=True)  # type: ignore
     job_contents = ArrayField(TextField, null=True)  # type: ignore
 
-    def to_dict(self):
-        return {
+    def to_dict(self, ignore_raw_content=False):
+        res = {
             "id": self.get_id(),
             "job_crawl_entry_id": self.job_crawl_entry.get_id(),
             "indeed_job_id": self.indeed_job_id,
             "indeed_job_url": self.indeed_job_url,
             "google_job_id": self.google_job_id,
             "google_job_url": self.google_job_url,
-            "raw_content": self.raw_content,
             "title": self.title,
             "skills": self.skills,
             "salary": self.salary,
@@ -119,6 +131,10 @@ class JobCrawlResult(BaseModel):
             "created_at": self.create_at,
             "updated_at": self.updated_at,
         }
+        if not ignore_raw_content:
+            res["raw_content"] = self.raw_content
+            
+        return res
 
     class Meta:
         db_table = "job_crawl_result"
@@ -136,6 +152,7 @@ class JobMatchResult(BaseModel):
     def to_dict(self, populate_job_crawl_result=False):
         res = {
             "id": self.get_id(),
+            "job_crawl_result_id": self.job_crawl_result.get_id(),
             "dream_job_id": self.dream_job.get_id(),
             "matching_points": self.matching_points,
             "warning_points": self.warning_points,
@@ -143,7 +160,8 @@ class JobMatchResult(BaseModel):
             "updated_at": self.updated_at,
         }
         if populate_job_crawl_result:
-            res["job_crawl_result"] = self.job_crawl_result.to_dict()
+            res["job_crawl_result"] = self.job_crawl_result.to_dict(ignore_raw_content=True)
+        return res
 
     class Meta:
         db_table = "job_match_result"

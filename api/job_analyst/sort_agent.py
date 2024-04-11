@@ -7,13 +7,6 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-class JobType(StrEnum):
-	full_time = "full_time"
-	permanent = "permanent"
-	part_time = "part_time"
-	contract = "contract"
-	internship = "internship"
-	temporary = "temporary"
 
 class JobSortResult(BaseModel):
 	salary: Optional[List[int]]
@@ -23,7 +16,7 @@ class JobSortResult(BaseModel):
 	experience: Optional[str]
 	company: Optional[str]
 	remote_ok: Optional[bool]
-	job_types: Optional[List[JobType]]
+	job_types: Optional[List[str]]
 	benefits:Optional[List[str]]
 	job_contents: Optional[List[str]]
 

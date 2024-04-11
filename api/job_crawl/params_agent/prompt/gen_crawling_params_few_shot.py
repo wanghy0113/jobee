@@ -8,7 +8,7 @@ prompt = {
       "remote_ok": // Optional boolean value indicating if remote work is acceptable, should be "true" or "false"
       "distance_within_kms": // Optional distance within kms extracted from the job description
       "salary_range": // Optional salary range extracted from the job description, should be a list of two integers
-      "job_type": // Optional job type extracted from the job description, values can be "full_time", "part_time", "contract", "internship", or "temporary"
+      "job_types": // Optional job type extracted from the job description, should be a list of values which can be "full_time", "part_time", "contract", "internship", or "temporary"
     }}
   """,
   "examples": [
@@ -20,7 +20,7 @@ prompt = {
         "remote_ok": true,
         "distance_within_kms": null,
         "salary_range": [100000, 150000],
-        "job_type": "full_time"
+        "job_types": ["full_time"]
       }}"""
     ),
   ]

@@ -22,5 +22,5 @@ class Crawler(ABC):
 
 
 	@abstractmethod
-	def crawl(self, params: CrawlParams, callback: CrawlCallback, options = {}):
+	async def crawl(self, params: CrawlParams, callback: CrawlCallback, options = {}):
 		pass

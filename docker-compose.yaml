@@ -1,5 +1,13 @@
 version: '3'
 services:
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
   db:
     image: postgres:latest
     ports:
@@ -11,15 +19,16 @@ services:
       POSTGRES_PASSWORD: 319298
       POSTGRES_DB: jobee_dev
 
-  api:
-    build: ./api
-    ports:
-      - "8000:8000"
-    environment:
-      DATABASE_HOST: db
-      DATABASE_USER: user
-      DATABASE_PASSWORD: password
-      DATABASE_NAME: mydatabase
+  # api:
+  #   build: ./api
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     DATABASE_HOST: db
+  #     DATABASE_USER: user
+  #     DATABASE_PASSWORD: password
+  #     DATABASE_NAME: mydatabase
 
 volumes:
+  redis_data:
   postgres-data:

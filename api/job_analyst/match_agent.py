@@ -51,7 +51,7 @@ User profile:
                     raise ValueError("Result not found")
 
                 res = JobMatchResult.model_validate_json(raw_result)
-                logging.debug(f"Job sorted: {res}")
+                logging.debug(f"Job matched: {res}")
                 return res
             except Exception as e:
                 logging.error(f"Failed to match job: {e}, retrying...")
