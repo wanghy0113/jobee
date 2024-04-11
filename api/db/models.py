@@ -8,12 +8,12 @@ from peewee import (
     IntegerField,
     SQL,
 )
-from playhouse.postgres_ext import PostgresqlExtDatabase, ArrayField
+from playhouse.postgres_ext import PostgresqlExtDatabase, ArrayField, DateTimeTZField
 import datetime
 import logging
 
 
-logger = logging.getLogger('peewee')
+logger = logging.getLogger("peewee")
 logger.setLevel(logging.WARNING)
 # Connect to a Postgres database.
 db = PostgresqlExtDatabase(
@@ -32,18 +32,22 @@ class BaseModel(Model):
 class User(BaseModel):
     email = CharField(unique=True)
     password = CharField()
-    created_at = DateTimeField(default=datetime.datetime.now)
+    created_at = DateTimeTZField(default=datetime.datetime.now(datetime.timezone.utc))
 
     def to_dict(self):
-        return {"id": self.get_id(), "email": self.email, "created_at": self.created_at}
+        return {
+            "id": self.get_id(),
+            "email": self.email,
+            "created_at": self.created_at.isoformat(),  # type: ignore
+        }
 
     class Meta:
         db_table = "user"
 
 
 class JobCrawlEntry(BaseModel):
-    created_at = DateTimeField(default=datetime.datetime.now)
-    last_run_at = DateTimeField(null=True)
+    created_at = DateTimeTZField(default=datetime.datetime.now(datetime.timezone.utc))
+    last_run_at = DateTimeTZField(null=True)
     last_run_interval_days = IntegerField(null=True)
 
     platform = CharField()
@@ -62,16 +66,16 @@ class DreamJob(BaseModel):
     # DreamJob is a table that stores the user's dream job descriptions.
     user = ForeignKeyField(User, backref="dream_jobs")
     raw_description = TextField()
-    created_at = DateTimeField(default=datetime.datetime.now)
-    last_matched_at = DateTimeField(null=True)
+    created_at = DateTimeTZField(default=datetime.datetime.now(datetime.timezone.utc))
+    last_matched_at = DateTimeTZField(null=True)
 
     def to_dict(self):
         return {
             "id": self.get_id(),
             "user_id": self.user.get_id(),
             "raw_description": self.raw_description,
-            "created_at": self.created_at,
-            "last_matched_at": self.last_matched_at,
+            "created_at": self.created_at.isoformat(), # type: ignore
+            "last_matched_at": self.last_matched_at.isoformat(), # type: ignore
         }
 
     class Meta:
@@ -84,14 +88,15 @@ class DreamJobCrawlEntry(BaseModel):
     # are the same. This is to avoid duplicate crawl entries.
     dream_job = ForeignKeyField(DreamJob)
     job_crawl_entry = ForeignKeyField(JobCrawlEntry)
+    created_at = DateTimeTZField(default=datetime.datetime.now(datetime.timezone.utc))
 
     class Meta:
         db_table = "dream_job_crawl_entry"
 
 
 class JobCrawlResult(BaseModel):
-    create_at = DateTimeField(default=datetime.datetime.now)
-    updated_at = DateTimeField(default=datetime.datetime.now)
+    create_at = DateTimeTZField(default=datetime.datetime.now(datetime.timezone.utc))
+    updated_at = DateTimeTZField(default=datetime.datetime.now(datetime.timezone.utc))
     job_crawl_entry = ForeignKeyField(JobCrawlEntry, backref="crawl_results")
 
     indeed_job_id = CharField(null=True, unique=True)
@@ -102,9 +107,8 @@ class JobCrawlResult(BaseModel):
     raw_content = TextField()
     title = CharField()
     skills = ArrayField(TextField, null=True)  # type: ignore
-    salary = ArrayField(null=True)
+    salary = ArrayField(IntegerField, null=True)
     experience = CharField(null=True)
-    salary = CharField(null=True)
     company = CharField()
     remote_ok = BooleanField(null=True)
     job_types = ArrayField(TextField, null=True)  # type: ignore
@@ -128,12 +132,12 @@ class JobCrawlResult(BaseModel):
             "job_types": self.job_types,
             "benefits": self.benefits,
             "job_contents": self.job_contents,
-            "created_at": self.create_at,
-            "updated_at": self.updated_at,
+            "created_at": self.create_at.isoformat(),  # type: ignore
+            "updated_at": self.updated_at.isoformat(),  # type: ignore
         }
         if not ignore_raw_content:
             res["raw_content"] = self.raw_content
-            
+
         return res
 
     class Meta:
@@ -141,8 +145,8 @@ class JobCrawlResult(BaseModel):
 
 
 class JobMatchResult(BaseModel):
-    created_at = DateTimeField(default=datetime.datetime.now)
-    updated_at = DateTimeField(default=datetime.datetime.now)
+    created_at = DateTimeTZField(default=datetime.datetime.now(datetime.timezone.utc))
+    updated_at = DateTimeTZField(default=datetime.datetime.now(datetime.timezone.utc))
     dream_job = ForeignKeyField(DreamJob, backref="job_match_results")
     job_crawl_result = ForeignKeyField(JobCrawlResult, backref="job_match_results")
 
@@ -156,11 +160,13 @@ class JobMatchResult(BaseModel):
             "dream_job_id": self.dream_job.get_id(),
             "matching_points": self.matching_points,
             "warning_points": self.warning_points,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
+            "created_at": self.created_at.isoformat(), # type: ignore
+            "updated_at": self.updated_at.isoformat(), # type: ignore
         }
         if populate_job_crawl_result:
-            res["job_crawl_result"] = self.job_crawl_result.to_dict(ignore_raw_content=True)
+            res["job_crawl_result"] = self.job_crawl_result.to_dict(
+                ignore_raw_content=True
+            )
         return res
 
     class Meta:

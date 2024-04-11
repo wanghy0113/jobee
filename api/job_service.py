@@ -13,11 +13,7 @@ from db.models import (
 import datetime
 from typing import Callable, Any
 
-from job_crawl.indeed import IndeedCrawler
 from job_crawl.params_agent.agent import CrawlingParamsAgent, ParamsAgentResult
-import time
-
-logging.basicConfig(level=logging.DEBUG)
 
 
 class JobService:
@@ -61,7 +57,8 @@ class JobService:
                             JobCrawlEntry.remote_ok == agent_result.remote_ok,
                             JobCrawlEntry.platform == platform,
                         )
-                        if existing:
+                        if existing and len(existing) > 0:
+                            entries.extend(existing)
                             continue
                         entry = JobCrawlEntry.create(
                             platform=platform,
@@ -143,6 +140,12 @@ class JobService:
                 "%Y%m%d"
             ):
                 logging.debug(f"Skip crawling job for entry: {entry.get_id()}")
+                if on_result is not None:
+                    results = JobCrawlResult.select().where(
+                        JobCrawlResult.job_crawl_entry == entry
+                    )
+                    for result in results:
+                        on_result(result)
                 return
         logging.debug(f"Start crawling job for entry: {entry.get_id()}")
 
@@ -215,8 +218,8 @@ class JobService:
             .where(DreamJobCrawlEntry.dream_job == dream_job_id)
         )
 
-        for entry in crawl_entries[:1]:
-            await self.crawl_for_entry(entry, on_result=on_result, max_num=1)
+        for entry in crawl_entries:
+            await self.crawl_for_entry(entry, on_result=on_result)
 
     def match_for_dream_job(self, dream_job_id: int):
         dream_job: DreamJob | None = DreamJob.get_by_id(dream_job_id)

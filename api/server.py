@@ -19,6 +19,8 @@ from jose import JWTError, jwt
 from tasks import crawl_and_match
 from starlette.responses import StreamingResponse
 import asyncio
+from fastapi.middleware.cors import CORSMiddleware
+import json
 
 SECRET_KEY = "secret"
 
@@ -42,6 +44,16 @@ class MatchDreamJobRequest(BaseModel):
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 app = FastAPI()
+origins = [
+    "*",
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Allows specified origins
+    allow_credentials=True,  # Allows credentials (cookies, authorization headers, etc.) to be included
+    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
 job_service = JobService(
     {
         "indeed": IndeedCrawler({"browser_type": "chromium", "headless": True}),
@@ -103,8 +115,8 @@ async def crawl_and_match_dream_job_generator(dream_job: DreamJob):
 
     def on_result(result: JobCrawlResult):
         match_res = job_service.match_job(dream_job, result)
+
         if match_res:
-            print(f"job match result: {match_res.to_dict(populate_job_crawl_result=True)}")
             match_res_queue.put_nowait(match_res)
 
 
@@ -113,11 +125,9 @@ async def crawl_and_match_dream_job_generator(dream_job: DreamJob):
     yield "stage: crawling dream job"
 
     while not crawl_task.done() or not match_res_queue.empty():
-        print("waiting for match result")
         try:
             match_res = await asyncio.wait_for(match_res_queue.get(), timeout=2.0)
-            print(f"job match result: {match_res}")
-            yield f"job match result: {match_res.to_dict(populate_job_crawl_result=True)}"
+            yield f"job match result: {json.dumps(match_res.to_dict(populate_job_crawl_result=True))}"
         except asyncio.TimeoutError:
             continue
 
