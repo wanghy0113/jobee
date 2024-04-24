@@ -22,6 +22,10 @@ psycopg2 = "^2.9.9"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 celery = {extras = ["redis"], version = "^5.3.6"}
 sse-starlette = "^2.1.0"
+beautifulsoup4 = "^4.12.3"
+langchain-anthropic = "^0.1.11"
+pdfminer-six = "^20231228"
+python-multipart = "^0.0.9"
 
 
 [build-system]

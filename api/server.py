@@ -1,28 +1,32 @@
+from io import BytesIO
 from job_analyst.match_agent import JobMatchAgent
 from job_analyst.sort_agent import JobSortAgent
 from job_crawl.params_agent.agent import CrawlingParamsAgent
-from job_crawl.indeed import IndeedCrawler
 import logging
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, File, UploadFile, Form
 from fastapi.security import OAuth2PasswordBearer
-from job_service import JobService
+from job_service.job_service import JobService
+from user_profile.user_profile_summarization_agent import UserProfileSummarizationAgent
 import uvicorn
 from pydantic import BaseModel
 from db.models import (
-    DreamJob,
-    JobCrawlResult,
+    UserProfile,
     User,
 )
 import hashlib
 from typing import Annotated
 from jose import JWTError, jwt
-from tasks import crawl_and_match
 from starlette.responses import StreamingResponse
-import asyncio
+from job_crawl.google import GoogleCrawler
+from langchain_anthropic import ChatAnthropic
+from pdfminer.high_level import extract_text
 
 SECRET_KEY = "secret"
 
 logging.basicConfig(level=logging.DEBUG)
+for logger_name in logging.root.manager.loggerDict:
+    logger = logging.getLogger(logger_name)
+    logger.setLevel(logging.WARNING)
 
 
 class CreateUserRequest(BaseModel):
@@ -30,10 +34,10 @@ class CreateUserRequest(BaseModel):
     password: str
 
 
-class CreateDreamJobRequest(BaseModel):
-    user_id: int
-    description: str
-    enable_job_crawl_and_match: bool = True
+class CreateUserProfileRequest(BaseModel):
+    raw_content: str | None = None
+    interested_job: str | None = None
+    enable_job_crawl_and_match: bool = False
 
 
 class MatchDreamJobRequest(BaseModel):
@@ -42,13 +46,20 @@ class MatchDreamJobRequest(BaseModel):
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 app = FastAPI()
+model = ChatAnthropic(
+    model_name="claude-3-haiku-20240307",
+    api_key="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",  # type: ignore
+    timeout=60,
+    temperature=0,
+)
 job_service = JobService(
     {
-        "indeed": IndeedCrawler({"browser_type": "chromium", "headless": True}),
+        "google": GoogleCrawler({"browser_type": "chromium", "headless": True}),
     },
     CrawlingParamsAgent(),
-    JobSortAgent(),
-    JobMatchAgent(),
+    JobSortAgent(model),
+    JobMatchAgent(model),
+    UserProfileSummarizationAgent(model),
 )
 
 
@@ -98,79 +109,66 @@ def create_user(req: CreateUserRequest):
     return user.to_dict()
 
 
-async def crawl_and_match_dream_job_generator(dream_job: DreamJob):
-    match_res_queue = asyncio.Queue()
-
-    def on_result(result: JobCrawlResult):
-        match_res = job_service.match_job(dream_job, result)
-        if match_res:
-            print(f"job match result: {match_res.to_dict(populate_job_crawl_result=True)}")
-            match_res_queue.put_nowait(match_res)
-
-
-    crawl_task = asyncio.create_task(job_service.crawl_for_dream_job(dream_job.get_id(), on_result=on_result))
-    logging.debug("Crawl task created")
-    yield "stage: crawling dream job"
-
-    while not crawl_task.done() or not match_res_queue.empty():
-        print("waiting for match result")
-        try:
-            match_res = await asyncio.wait_for(match_res_queue.get(), timeout=2.0)
-            print(f"job match result: {match_res}")
-            yield f"job match result: {match_res.to_dict(populate_job_crawl_result=True)}"
-        except asyncio.TimeoutError:
-            continue
-
-    yield "stage: crawling done"
-
-
-async def create_and_process_dream_job_generator(
-    user_id: int, description: str, enable_job_crawl_and_match: bool
+@app.post("/user/{user_id}/user_profile")
+async def create_user_profile(
+    user_id: int,
+    profile_file: UploadFile = File(...),
+    profile_content=Form(None),
+    interested_job: str = Form(None),
 ):
-    yield "stage: creating dream job"
-    dream_job = job_service.create_dream_job(user_id, description)
-    yield "stage: creating dream job crawl entries"
-    job_service.create_dream_job_crawl_entries(dream_job)
-    if enable_job_crawl_and_match:
-        async for res in crawl_and_match_dream_job_generator(dream_job):
-            yield res
+    if profile_content is None and profile_file is None:
+        raise HTTPException(status_code=400, detail="No content provided")
+
+    if profile_file is not None and profile_file.content_type != "application/pdf":
+        raise HTTPException(status_code=400, detail="File is not a PDF")
+
+    user = User.get_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if profile_file is not None:
+        contents = await profile_file.read()
+        bytes_io = BytesIO(contents)
+
+        try:
+            raw_content = extract_text(bytes_io)
+        except Exception as e:
+            raise HTTPException(
+                status_code=500, detail="Could not extract text from the PDF"
+            )
+    else:
+        raw_content = profile_content
+
+    if raw_content is None:
+        raise HTTPException(status_code=400, detail="No content provided")
+
+    user_profile = job_service.create_user_profile(user, raw_content, interested_job)
+    return user_profile.to_profile_dict()
 
 
-@app.post("/dream_job")
-def create_dream_job(req: CreateDreamJobRequest):
-    logging.debug(f"Create dream job for user: {req}")
+@app.post("/user/{user_id}/user_profile/{user_profile_id}/crawl_jobs")
+def crawl_jobs(user_id: int, user_profile_id: int):
+    user_profile: UserProfile = UserProfile.get_by_id(user_profile_id)
+    if not user_profile:
+        raise HTTPException(status_code=404, detail="User profile not found")
+    if user_profile.user != user_id:
+        raise HTTPException(
+            status_code=403, detail="User profile does not belong to the user"
+        )
+
     return StreamingResponse(
-        create_and_process_dream_job_generator(
-            req.user_id, req.description, req.enable_job_crawl_and_match
-        ),
+        job_service.crawl_jobs_for_user_profile_generator(user_profile, 1),
         media_type="text/event-stream",
     )
 
 
-@app.post("/dream_job/{dream_job_id}/crawl_jobs")
-def crawl_jobs(dream_job_id: int):
-    dream_job = job_service.get_dream_job(dream_job_id)
-    if not dream_job:
-        raise HTTPException(status_code=404, detail="Dream job not found")
-    return StreamingResponse(
-        crawl_and_match_dream_job_generator(dream_job), media_type="text/event-stream"
-    )
+@app.get("/user/{user_id}/user_profile/{user_profile_id}/jobs")
+def get_jobs_for_user_profile(user_id: int, user_profile_id: int):
+    user_profile: UserProfile = UserProfile.get_by_id(user_profile_id)
+    if not user_profile:
+        raise HTTPException(status_code=404, detail="User profile not found")
 
-
-@app.post("/dream_job/{dream_job_id}/lro/crawl_jobs")
-def crawl_jobs_async(dream_job_id: int):
-    res = crawl_and_match.delay(dream_job_id)
-    return {"task_id": res.id}
-
-
-@app.post("/dream_job/{dream_job_id}/match_jobs")
-def match_dream_jobs(dream_job_id: int, req: MatchDreamJobRequest):
-    job_service.match_for_dream_job(dream_job_id)
-
-
-@app.get("/dream_job/{dream_job_id}/match_results")
-def get_job_match_results(dream_job_id: int):
-    return job_service.get_match_results(dream_job_id)
+    return user_profile.get_match_results()
 
 
 if __name__ == "__main__":

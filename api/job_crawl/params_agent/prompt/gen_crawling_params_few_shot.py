@@ -1,26 +1,33 @@
 prompt = {
   "system": """
-    You will be given the description of a person's dream jobs. Your responsibility is to generate a dictionary of parameters that will be used to crawl jobs.
+    You will be given the profile of a job seeker. Your responsibility is to generate a dictionary of parameters that will be used to crawl jobs for the job seeker.
     The returned value should be a JSON with the following structure:
     {{
-      "locations": // List of locations extracted from the job description, return empty list if no location is found
-      "keywords": // List of keywords extracted from the job description, return empty list if no search term is found
+      "locations": // List of locations used for job serach, return empty list if no location is found. Each location should follow "city, state/province" strictly. Don't use adjective words like "beautiful" or "greater" in the location. For example, "San Francisco, CA" is correct, but "Beautiful San Francisco, CA" is incorrect. 
+      "keywords": // List of keywords used for job search. Maximum 3 keywords. Keywords should be job titles related to the seeker's profile.
       "remote_ok": // Optional boolean value indicating if remote work is acceptable, should be "true" or "false"
-      "distance_within_kms": // Optional distance within kms extracted from the job description
       "salary_range": // Optional salary range extracted from the job description, should be a list of two integers
-      "job_types": // Optional job type extracted from the job description, should be a list of values which can be "full_time", "part_time", "contract", "internship", or "temporary"
+      "job_types": // Optional job type extracted from the job description, should be a list of values which can be "full_time", "part_time", "contract", "internship", or "temporary".
     }}
   """,
   "examples": [
     (
-      "I'm a full stack developer with 3 year experience. I'm currently working for a healthcare company. I'm good at React, Node.js, Express, MongoDB, and AWS. My dream job is to work for a mid-size or large-size company with a good work-life balance. The company should have an engineering culture. The role should be a full-time role with a salary range of $100k to $150k. My preferred locations are San Francisco, New York, and Seattle. Remote work is also acceptable.",
+      """
+{{
+  "job_title": "Sales Executive",
+  "skills": ["Negotiation,CRM Software,Lead Generation,"Customer Relationship Management","Market Analysis",Presentation,Communication,"Sales Strategy","Product Knowledge","Team Leadership"],
+  "job_contents": ["Developed and implemented sales strategies to penetrate new markets and increase market share","Managed a portfolio of accounts and oversaw customer satisfaction and service delivery","Utilized CRM software to track sales opportunities and customer interactions","Conducted market analysis to identify trends and opportunities for growth","Led sales presentations to high-profile clients and negotiated contracts to close deals","Trained and led a team of junior sales associates, focusing on skill development and performance improvement"],
+  "education": ["Bachelor's Degree in Business Administration", "Professional Sales Management Certification"],
+  "experience": ['5+ years of experience in B2B and B2C sales environments'],
+  "interested_job": "Seeking a Sales Manager or Senior Sales Executive position in a dynamic company where I can contribute to business growth and strategy development. Preferably in the technology or consumer goods sector, with opportunities for career advancement. The job should be based on San Fracisco, CA or remotely from the US."
+}}
+      """,
       """{{
-        "locations": ["San Francisco", "New York", "Seattle"],
-        "keywords": ["full stack developer", "front end developer", "back end developer"],
-        "remote_ok": true,
-        "distance_within_kms": null,
-        "salary_range": [100000, 150000],
-        "job_types": ["full_time"]
+        "locations": ["San Francisco, CA"],
+        "keywords": ["sales manager", "sales executive", "senior sales executive"],
+        "remote_ok": null,
+        "salary_range": null,
+        "job_types": null
       }}"""
     ),
   ]
