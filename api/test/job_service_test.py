@@ -15,7 +15,7 @@ model = ChatAnthropic(
     timeout=60,
     temperature=0,
 )
-chatgpt = ChatOpenAI(model="gpt-3.5-turbo-0125")
+chatgpt = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature=0)
 job_service1 = JobService(
     {
         "google": GoogleCrawler({"browser_type": "chromium", "headless": True}),
@@ -39,6 +39,6 @@ job_service2 = JobService(
 # asyncio.run(job_service1.crawl_for_user_profile(2, 3))
 
 user_profile = UserProfile.get_by_id(2)
-job = JobCrawlResult.get_by_id(7)
+job = JobCrawlResult.get_by_id(8)
 res = job_service2.match_job(user_profile, job)
 print(">>>>><<<<<", res)

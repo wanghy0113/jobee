@@ -112,7 +112,7 @@ Please perform matching for the following information - forget the previous exam
     def match_meta(self, job_content: dict, user_profile: str, max_retries=3):
         logging.debug("Start matching job meta...")
         job_content = {
-            "job_title": job_content.get("job_title", ""),
+            "job_title": job_content.get("title", ""),
             "locations": job_content.get("locations", []),
             "salary": job_content.get("salary", ""),
             "experience": job_content.get("experience", ""),
@@ -131,10 +131,8 @@ Please perform matching for the following information - forget the previous exam
                 output = self._match_meta_chain.invoke(
                     {"job_content": job_content, "user_profile": user_profile}
                 )
-                print(">>>>", output)
                 starting_index = output.find("{")
                 output = output[starting_index:]
-                print(">>>>len", len(output))
                 res = json.loads(output)
                 if not res:
                     raise ValueError("Result not found")
@@ -158,10 +156,8 @@ Please perform matching for the following information - forget the previous exam
                 output = self._match_skills_chain.invoke(
                     {"job_content": job_content, "user_profile": user_profile}
                 )
-                print(">>>>", output)
                 starting_index = output.find("{")
                 output = output[starting_index:]
-                print(">>>>len", len(output))
                 res = json.loads(output)
                 if not res:
                     raise ValueError("Result not found")
@@ -173,8 +169,7 @@ Please perform matching for the following information - forget the previous exam
                 retry += 1
 
         logging.error(f"Failed to match job skills after {retry} retries.")
-        
-    
+
     def match_job_contents(self, job_content: dict, user_profile: str, max_retries=3):
         logging.debug("Start matching job contents...")
         job_content = {
@@ -186,11 +181,9 @@ Please perform matching for the following information - forget the previous exam
                 output = self._match_job_contents_chain.invoke(
                     {"job_content": job_content, "user_profile": user_profile}
                 )
-                print(">>>>", output)
                 starting_index = output.find("{")
                 output = output[starting_index:]
-                print(">>>>len", len(output))
-                res = json.loads(output)
+                res: dict = json.loads(output)
                 if not res:
                     raise ValueError("Result not found")
 
@@ -205,7 +198,7 @@ Please perform matching for the following information - forget the previous exam
     def match_all_in_one(self, job_content: dict, user_profile: str, max_retries=3):
         logging.debug("Start matching job all in one...")
         job_content = {
-            "job_title": job_content.get("job_title", ""),
+            "job_title": job_content.get("title", ""),
             "locations": job_content.get("locations", []),
             "salary": job_content.get("salary", ""),
             "experience": job_content.get("experience", ""),
@@ -226,10 +219,8 @@ Please perform matching for the following information - forget the previous exam
                 output = self._all_in_one_chain.invoke(
                     {"job_content": job_content, "user_profile": user_profile}
                 )
-                print(">>>>", output)
                 starting_index = output.find("{")
                 output = output[starting_index:]
-                print(">>>>len", len(output))
                 res = json.loads(output)
                 if not res:
                     raise ValueError("Result not found")
@@ -237,17 +228,15 @@ Please perform matching for the following information - forget the previous exam
                 logging.debug(f"Job matched: {res}")
                 return res
             except Exception as e:
-                logging.error(f"Failed to match job: {e}, retrying...")
+                logging.error(f"Failed to match job all in one: {e}, retrying...")
                 retry += 1
 
         logging.error(f"Failed to match job after {retry} retries.")
 
     def match_with_3_steps(self, job_content: dict, user_profile: str, max_retries=3):
-        logging.debug("Start matching job with 2 steps...")
+        logging.debug("Start matching job with 3 steps...")
         meta_match_res = self.match_meta(job_content, user_profile, max_retries)
-        skills_match_res = self.match_skills(
-            job_content, user_profile, max_retries
-        )
+        skills_match_res = self.match_skills(job_content, user_profile, max_retries)
         job_contents_match_res = self.match_job_contents(
             job_content, user_profile, max_retries
         )
@@ -255,27 +244,3 @@ Please perform matching for the following information - forget the previous exam
             return None
 
         return {**meta_match_res, **skills_match_res, **job_contents_match_res}
-
-    # def match(self, job_content: str, user_profile: str, max_retries=3):
-    #     logging.debug("Start matching job...")
-    #     retry = 0
-    #     while retry < max_retries:
-    #         try:
-    #             output = self._chain.invoke(
-    #                 {"job_content": job_content, "user_profile": user_profile}
-    #             )
-    #             print(">>>>", output)
-    #             result_regex = r"```([\s\S]+)```"
-    #             raw_result = re.findall(result_regex, output)[-1]
-
-    #             if not raw_result:
-    #                 raise ValueError("Result not found")
-
-    #             res = JobMatchResult.model_validate_json(raw_result)
-    #             logging.debug(f"Job matched: {res}")
-    #             return res
-    #         except Exception as e:
-    #             logging.error(f"Failed to match job: {e}, retrying...")
-    #             retry += 1
-
-    #     logging.error(f"Failed to match job after {retry} retries.")

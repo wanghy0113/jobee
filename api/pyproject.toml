@@ -5,7 +5,10 @@ description = ""
 authors = ["wanghy0113 <henrywang0113@gmail.com>"]
 readme = "README.md"
 packages = [
-    { include = "job_crawl" }
+    { include = "job_crawl" },
+    { include = "job_analyst" },
+    { include = "job_service" },
+    { include = "db" },
 ]
 
 [tool.poetry.dependencies]

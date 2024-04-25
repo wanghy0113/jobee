@@ -319,7 +319,7 @@ class JobService:
                 res: JobCrawlResult = await asyncio.wait_for(
                     res_queue.get(), timeout=2.0
                 )
-                yield f"job crawl result: {res.to_dict(ignore_raw_content=True)}"
+                yield f"job crawl result: {res.to_job_dict()}"
             except asyncio.TimeoutError:
                 continue
 

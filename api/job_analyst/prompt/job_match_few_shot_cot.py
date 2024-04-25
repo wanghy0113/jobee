@@ -184,7 +184,7 @@ Example 1:
         "Health insurance<thought:insurance mentioned in the profile's interested_job><result:match>",
         "Bonus opportunities<thought:not mentioned in the profile><result:unknown>",
         "RSU<thought:not mentioned in the profile><result:unknown>"
-    ],
+    ]
 }}
             """,
         ),
@@ -195,11 +195,10 @@ skills_prompt = {
     "system": """
     You will be given the content of a job and a job seeker's profile. Your responsibility is to generate skills matching insigts.
     You should analyze each skills item in the job description by giving thought and a result wrapped in < and > after each item. So an item becomes "item content<thought:your thought><result:match|mismatch|likely-match|unknown>"
-    Note that if it's a skill match, you should also specify which skills in the job seeker's profile match by <result:match:skill1,skill2>.
+    To dictate a match, you must find corresponding skills in the job seeker's profile and include the skills in the result as <result:match:skill1,skill2,skill3...>
+    To dictate a likely-match, you should find strong evidence by matching job seeker's skills, job title or job contents and give result as <result:likely-match:skill1,skill2,skill3...> or <result:likely-match>
     Please include your reasoning for each item!!! This is important.
-    Try your best to include specific skills from the job seeker's profile that match the job content item in the result.
-    
-    
+        
     Note: The returned response should always start with "{{" and end with "}}", no extra characters are allowed.
     """,
     "examples": [
@@ -210,7 +209,7 @@ Example 1:
 ---Example job seeker profile---
 {{
     "job_title": "full stack developer",
-    "skills": ["React", "Node.js", "Express", "MongoDB", "AWS"],
+    "skills": ["React", "Node.js", "Express", "MongoDB", "AWS", "Docker"],
     "education": "Bachelor's degree in Computer Science",
     "experience": "3 years",
     "job_contents": [
@@ -228,12 +227,13 @@ Example 1:
 {{
     "skills": [
         "Golang",
+        "React.js",
         "Designing, building, and maintaining public-facing APIs",
         "Testing and compliance with OpenAPI specifications",
         "API Authentication and Authorization (SAML, RBAC, OAuth, JWT)",
         "Software testing",
         "Observability (metrics, logging, tracing)",
-        "Containerization and orchestration technologies (Docker, Kubernetes)",
+        "Containerization and orchestration technologies",
         "CI/CD pipelines",
         "Security products"
     ]
@@ -243,12 +243,13 @@ Example 1:
 {{
     "skills": [
         "Golang<thought:profile does not have Golang in its skill set><result:mismatch>",
-        "Designing, building, and maintaining public-facing APIs<thought:skills include express and node.js which can be used for API development><result:match:Express,Node.js>",
-        "Testing and compliance with OpenAPI specifications<thought:no OpenAPI is mentioned in the profile but skills include API related techniques><result:likely-match:Express,Node.js>",
+        "React.js<thought:React is mentioned in the profile's skill set><result:match:React>",
+        "Designing, building, and maintaining public-facing APIs<thought:skills include Express and Node.js which can be used for API development><result:match:Express,Node.js>",
+        "Testing and compliance with OpenAPI specifications<thought:no OpenAPI is mentioned in the profile but skills include Express and Node.js which can be related to OpenAPI><result:likely-match:Express,Node.js>",
         "API Authentication and Authorization (SAML, RBAC, OAuth, JWT)<thought:No authentication and authorization is mentioned in the profile><mismatch>]",
         "Software testing<thought:no testing is mentioned in the profile but testing is essential for any developer job><result:likely-match>",
         "Observability (metrics, logging, tracing)<thought:not mentioned in the profile><result:mismatch>",
-        "Containerization and orchestration technologies (Docker, Kubernetes)<thought:not mentioned in the profile><result:mismatch>",
+        "Containerization and orchestration technologies"<thought:skills include Docker which is related toContainerization ><result:likely-match:Docker>",
         "CI/CD pipelines<thought:not mentioned in the profile><mismatch>",
         "Security products<thought:not mentioned in the profile><mismatch>"
     ]

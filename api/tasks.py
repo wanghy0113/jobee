@@ -28,12 +28,12 @@ job_service = JobService(
 
 
 @celery_app.task
-async def crawl_and_match(dream_job_id: int):
-    dream_job = job_service.get_dream_job(dream_job_id)
-    if not dream_job:
+async def crawl_and_match(user_profile_id: int):
+    user_profile = job_service.get_user_profile(user_profile_id)
+    if not user_profile:
         return
 
     def on_result(result):
         print(result)
 
-    await job_service.crawl_for_dream_job(dream_job_id, 7, on_result=on_result)
+    await job_service.crawl_for_user_profile(user_profile_id, 7, on_result=on_result)

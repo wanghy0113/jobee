@@ -20,6 +20,7 @@ from starlette.responses import StreamingResponse
 from job_crawl.google import GoogleCrawler
 from langchain_anthropic import ChatAnthropic
 from pdfminer.high_level import extract_text
+from fastapi.middleware.cors import CORSMiddleware
 
 SECRET_KEY = "secret"
 
@@ -46,6 +47,13 @@ class MatchDreamJobRequest(BaseModel):
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 app = FastAPI()
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 model = ChatAnthropic(
     model_name="claude-3-haiku-20240307",
     api_key="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",  # type: ignore
