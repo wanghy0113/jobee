@@ -1,5 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 import Cookie from 'js-cookie';
+import { convertApiJobToJob } from './converter/job_converter';
+import { Job } from '../../types/job';
 
 axios.defaults.baseURL = 'http://localhost:8000';
 axios.interceptors.request.use(async (config) => {
@@ -16,6 +18,11 @@ interface CreateDreamJobRequest {
 interface CrawlDreamJobsRequest {
   dream_job_id: number;
   enable_job_matching: boolean;
+}
+
+interface GetJobsRequest {
+  user_id: number;
+  user_profile_id: number;
 }
 
 export function createDreamJob(req: CreateDreamJobRequest, onMessage: (message: string) => void) {
@@ -57,10 +64,10 @@ export async function crawlDreamJobs(req: CrawlDreamJobsRequest): Promise<AxiosR
   }
 }
 
-export async function getDreamJobs(): Promise<AxiosResponse> {
+export async function getJobs(req: GetJobsRequest): Promise<Job[]> {
   try {
-    const response = await axios.get('/dream_job');
-    return response;
+    const response = await axios.get(`/user/${req.user_id}/user_profile/${req.user_profile_id}/jobs`);
+    return response.data.map((job: any) => convertApiJobToJob(job));
   } catch (error) {
     throw new Error(`Error creating user: ${error}`);
   }
