@@ -1,0 +1,126 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
+}
+
+model User {
+  id           String          @id @default(cuid())
+  email        String          @unique
+  name         String?
+  password     String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  jobSearches  UserJobSearch[]
+  savedJobs    UserSavedJobs[]
+  userResumeId String?
+  userResume   UserResume?
+}
+
+model UserResume {
+  id String @id @default(cuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  workExperiences UserWorkExperience[]
+  educations      UserEducation[]
+}
+
+model UserWorkExperience {
+  id           String      @id @default(cuid())
+  title        String
+  company      String
+  location     String
+  startDate    DateTime
+  endDate      DateTime?
+  description  String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  userResume   UserResume? @relation(fields: [userResumeId], references: [id])
+  userResumeId String?
+}
+
+model UserEducation {
+  id           String      @id @default(cuid())
+  school       String
+  degree       String
+  field        String
+  awards       String[]
+  startDate    DateTime
+  endDate      DateTime?
+  description  String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  UserResume   UserResume? @relation(fields: [userResumeId], references: [id])
+  userResumeId String?
+}
+
+model UserJobSearch {
+  id          String @id @default(cuid())
+  userId      String @map("userId")
+  user        User   @relation(fields: [userId], references: [id])
+  jobLocation String
+  jobTitle    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserSavedJobs {
+  id             String @id @default(cuid())
+  userId         String @map("userId")
+  user           User   @relation(fields: [userId], references: [id])
+  googleJobId    String
+  jobTitle       String
+  jobLocation    String
+  jobDescription String
+  jobData        Json
+
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime?
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([userId, googleJobId])
+}
+
+model Organization {
+  id                          String                      @id
+  name                        String?
+  type                        String?
+  primary_role                String?
+  cb_url                      String?
+  domain                      String?
+  homepage_url                String?
+  logo_url                    String?
+  facebook_url                String?
+  twitter_url                 String?
+  linkedin_url                String?
+  combined_stock_symbols      String?
+  city                        String?
+  region                      String?
+  country_code                String?
+  short_description           String?
+  short_description_embedding Unsupported("vector(768)")?
+}
+
+model City {
+  id      Int     @id
+  name    String
+  country String
+  admin1  String?
+  lat     Float
+  lon     Float
+  pop     Int
+}
