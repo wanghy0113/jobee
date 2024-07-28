@@ -6,7 +6,7 @@ import * as jwt from 'jsonwebtoken'
 export class GoogleAuthService {
   private clientID = process.env.GOOGLE_CLIENT_ID
   private clientSecret = process.env.GOOGLE_CLIENT_SECRET
-  private redirectUri = 'http://localhost:8000/auth/google/callback'
+  private redirectUri = `${process.env.API_URL}/auth/google/callback`
 
   getGoogleAuthUrl() {
     const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth'

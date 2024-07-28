@@ -7,7 +7,7 @@ import React from "react";
 import { JobItem } from "@/components/job-item";
 import { useJob } from "@/app/context/job-context";
 import { ThreeDots } from "react-loader-spinner";
-import { Label } from "@/components/ui/label";
+import { ActionLabel } from "@/components/ui/action-label";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
@@ -114,7 +114,7 @@ export default function SearchPage() {
     <main className="flex min-h-screen flex-col py-2">
       <div className="flex px-4 items-center border-b w-full justify-center pb-2">
         <div className="flex ml-3 items-center">
-          <Label className="bg-white border border-gray-900 text-gray-900 max-w-none">
+          <ActionLabel className="bg-white border border-gray-900 text-gray-900 max-w-none">
             {/* <PencilIcon className="h-4 w-4 mr-1" /> */}
             <span className="font-bold">Title:</span>
             <input
@@ -122,8 +122,8 @@ export default function SearchPage() {
               value={jobTitleInputValue}
               onChange={(e) => setJobTitleInputValue(e.target.value)}
             />
-          </Label>
-          <Label className="bg-white border border-gray-900 text-gray-900 max-w-none">
+          </ActionLabel>
+          <ActionLabel className="bg-white border border-gray-900 text-gray-900 max-w-none">
             {/* <PencilIcon className="h-4 w-4 mr-1" /> */}
             <span className="font-bold">Location:</span>
             <input
@@ -131,8 +131,8 @@ export default function SearchPage() {
               value={jobLocationInputValue}
               onChange={(e) => setJobLocationInputValue(e.target.value)}
             />
-          </Label>
-          <Label
+          </ActionLabel>
+          <ActionLabel
             className="bg-gray-800 border text-white hover:bg-black"
             onClick={() =>
               jobLocationInputValue &&
@@ -150,7 +150,7 @@ export default function SearchPage() {
           >
             <MagnifyingGlassIcon className="h-4 w-4 mr-1" />
             {isJobSearchRunning ? "Searching" : "Run search"}
-          </Label>
+          </ActionLabel>
           {isJobSearchRunning && (
             <ThreeDots color="gray" width={32} height={16} />
           )}

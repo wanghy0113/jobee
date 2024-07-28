@@ -4,7 +4,8 @@ import { UserProfile } from "@/types/user-profile";
 import { setupCache } from "axios-cache-interceptor";
 import { Job } from "@/types/job";
 
-axios.defaults.baseURL = "http://localhost:8000";
+axios.defaults.baseURL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 axios.interceptors.request.use(async (config) => {
   const token = Cookie.get("next-auth.session-token");
   config.headers.Authorization = `Bearer ${token}`;
@@ -43,7 +44,7 @@ export interface Resume {
   phone?: string;
   address?: string;
   summary?: string;
-  education?: Education[];
+  educations?: Education[];
   work?: {
     company: string;
     title: string;
