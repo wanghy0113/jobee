@@ -28,12 +28,22 @@ export interface JobSearch {
 
 export interface Education {
   school: string;
-  major: string;
-  degree: string;
-  startDate: string;
-  endDate: string;
+  major?: string;
+  degree?: string;
+  startDate?: Date | null;
+  endDate?: Date | null;
   gpa?: string;
-  rewards?: string[];
+  awards?: string[];
+}
+
+export interface WorkExperience {
+  company: string;
+  title: string;
+  location?: string;
+  startDate?: Date | null;
+  endDate?: Date | null;
+  contents?: string[];
+  skills?: string[];
 }
 
 export interface Resume {
@@ -41,31 +51,17 @@ export interface Resume {
   lastName: string;
   email?: string;
   website?: string;
+  linkedin?: string;
+  github?: string;
   phone?: string;
   address?: string;
   summary?: string;
   educations?: Education[];
-  work?: {
-    company: string;
-    title: string;
-    description?: string;
-    startDate: string;
-    endDate?: string;
-    contents?: string[];
-    skills?: string[];
-  }[];
-  skills: {
-    name: string;
-  }[];
-  certifications?: {
-    name: string;
-  }[];
-  languages?: {
-    name: string;
-  }[];
-  achievements?: {
-    name: string;
-  }[];
+  workExperiences?: WorkExperience[];
+  skills: string[];
+  certifications?: string[];
+  languages?: string[];
+  achievements?: string[];
 }
 
 export interface Session {

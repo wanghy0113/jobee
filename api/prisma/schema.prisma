@@ -34,18 +34,33 @@ model UserResume {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])
 
+  firstName       String
+  lastName        String
+  email           String?
+  website         String?
+  linkedin        String?
+  github          String?
+  phone           String?
+  address         String?
+  summary         String?
+  skills          String[]
+  certifications  String[]
+  languages       String[]
+  achievements    String[]
   workExperiences UserWorkExperience[]
   educations      UserEducation[]
 }
 
 model UserWorkExperience {
-  id           String      @id @default(cuid())
-  title        String
-  company      String
-  location     String
-  startDate    DateTime
-  endDate      DateTime?
-  description  String
+  id        String    @id @default(cuid())
+  company   String
+  title     String
+  location  String?
+  startDate DateTime
+  endDate   DateTime?
+  contents  String[]
+  skills    String[]
+
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   userResume   UserResume? @relation(fields: [userResumeId], references: [id])
@@ -53,14 +68,15 @@ model UserWorkExperience {
 }
 
 model UserEducation {
-  id           String      @id @default(cuid())
-  school       String
-  degree       String
-  field        String
-  awards       String[]
-  startDate    DateTime
-  endDate      DateTime?
-  description  String
+  id        String    @id @default(cuid())
+  school    String
+  major     String
+  degree    String
+  startDate DateTime
+  endDate   DateTime?
+  gpa       String?
+  awards    String[]
+
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   UserResume   UserResume? @relation(fields: [userResumeId], references: [id])

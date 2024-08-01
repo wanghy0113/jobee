@@ -9,13 +9,13 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { link } from "fs";
 
 const formSchema = z.object({
   firstName: z.string().min(0).max(20),
@@ -24,6 +24,8 @@ const formSchema = z.object({
   phone: z.string().min(0).max(15).optional(),
   address: z.string().min(0).max(100).optional(),
   website: z.string().min(0).max(100).optional(),
+  linkedin: z.string().min(0).max(100).optional(),
+  github: z.string().min(0).max(100).optional(),
   summary: z.string().min(0).max(500).optional(),
 });
 
@@ -37,6 +39,8 @@ export function Personal() {
       lastName: session?.resume?.lastName || "",
       email: session?.resume?.email || "",
       website: session?.resume?.website || "",
+      linkedin: session?.resume?.linkedin || "",
+      github: session?.resume?.github || "",
       phone: session?.resume?.phone || "",
       address: session?.resume?.address || "",
       summary: session?.resume?.summary || "",
@@ -98,6 +102,32 @@ export function Personal() {
             render={({ field }: any) => (
               <FormItem className="max-w-96">
                 <FormLabel>Website</FormLabel>
+                <FormControl>
+                  <Input inputMode="url" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="linkedin"
+            render={({ field }: any) => (
+              <FormItem className="max-w-96">
+                <FormLabel>Linkedin</FormLabel>
+                <FormControl>
+                  <Input inputMode="url" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="github"
+            render={({ field }: any) => (
+              <FormItem className="max-w-96">
+                <FormLabel>Github</FormLabel>
                 <FormControl>
                   <Input inputMode="url" {...field} />
                 </FormControl>
