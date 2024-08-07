@@ -18,6 +18,14 @@ export class UsersService {
 
     return this.prisma.user.findUnique({
       where: { email },
+      include: {
+        userResume: {
+          include: {
+            educations: true,
+            workExperiences: true,
+          },
+        },
+      },
     })
   }
 

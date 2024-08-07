@@ -71,24 +71,27 @@ const testSkills = [
 export function SkillsAndOther() {
   const { session } = useSession();
 
-  const [skills, setSkills] = useState(session?.resume?.skills || []);
+  const [skills, setSkills] = useState(session?.user?.userResume?.skills || []);
   const [isAddingSkill, setIsAddingSkill] = useState(false);
   const [certifications, setCertifications] = useState(
-    session?.resume?.certifications || []
+    session?.user?.userResume?.certifications || []
   );
   const [isAddingCertification, setIsAddingCertification] = useState(false);
   const [achievements, setAchievements] = useState(
-    session?.resume?.achievements || []
+    session?.user?.userResume?.achievements || []
   );
   const [isAddingAchievement, setIsAddingAchievement] = useState(false);
 
-  const areSkillsChanged = !arraysEqual(session?.resume?.skills ?? [], skills);
+  const areSkillsChanged = !arraysEqual(
+    session?.user?.userResume?.skills ?? [],
+    skills
+  );
   const areCertificationsChanged = !arraysEqual(
-    session?.resume?.certifications ?? [],
+    session?.user?.userResume?.certifications ?? [],
     certifications
   );
   const areAchievementsChanged = !arraysEqual(
-    session?.resume?.achievements ?? [],
+    session?.user?.userResume?.achievements ?? [],
     achievements
   );
 
@@ -144,7 +147,7 @@ export function SkillsAndOther() {
             variant={"outline"}
             size={"sm"}
             onClick={() => {
-              setSkills(session?.resume?.skills || []);
+              setSkills(session?.user?.userResume?.skills || []);
             }}
           >
             Reset
@@ -205,7 +208,9 @@ export function SkillsAndOther() {
             variant={"outline"}
             size={"sm"}
             onClick={() => {
-              setCertifications(session?.resume?.certifications || []);
+              setCertifications(
+                session?.user?.userResume?.certifications || []
+              );
             }}
           >
             Reset
@@ -270,7 +275,7 @@ export function SkillsAndOther() {
             variant={"outline"}
             size={"sm"}
             onClick={() => {
-              setAchievements(session?.resume?.achievements || []);
+              setAchievements(session?.user?.userResume?.achievements || []);
             }}
           >
             Reset

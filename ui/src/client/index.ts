@@ -19,6 +19,7 @@ export interface User {
   name: string;
   email: string;
   id: string;
+  userResume?: Resume | null;
 }
 
 export interface JobSearch {
@@ -30,8 +31,8 @@ export interface Education {
   school: string;
   major?: string;
   degree?: string;
-  startDate?: Date | null;
-  endDate?: Date | null;
+  startDate?: Date | string | null;
+  endDate?: Date | string | null;
   gpa?: string;
   awards?: string[];
 }
@@ -40,15 +41,16 @@ export interface WorkExperience {
   company: string;
   title: string;
   location?: string;
-  startDate?: Date | null;
-  endDate?: Date | null;
+  startDate?: Date | string | null;
+  endDate?: Date | string | null;
   contents?: string[];
   skills?: string[];
 }
 
 export interface Resume {
-  firstName: string;
-  lastName: string;
+  id: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   website?: string;
   linkedin?: string;
@@ -58,7 +60,7 @@ export interface Resume {
   summary?: string;
   educations?: Education[];
   workExperiences?: WorkExperience[];
-  skills: string[];
+  skills?: string[];
   certifications?: string[];
   languages?: string[];
   achievements?: string[];
@@ -66,7 +68,6 @@ export interface Resume {
 
 export interface Session {
   user: User | null;
-  resume?: Resume | null;
   jobSearch?: JobSearch | null;
   savedJobs?: Job[] | null;
 }
@@ -197,5 +198,151 @@ export async function getSession(): Promise<Session> {
     return data;
   } catch (error) {
     throw new Error(`Error getting session: ${error}`);
+  }
+}
+
+export async function createResume({
+  data,
+}: {
+  data: Partial<Resume>;
+}): Promise<Resume> {
+  try {
+    const response = await axios.post(`/resume`, data, {
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(`Error creating resume: ${error}`);
+  }
+}
+
+export async function createResumeFromFile({
+  file,
+}: {
+  file: File;
+}): Promise<Resume> {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await axios.post(`/resume/create-from-file`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(`Error creating resume: ${error}`);
+  }
+}
+
+export async function createEducation({
+  resumeId,
+  data,
+}: {
+  resumeId: string;
+  data: Partial<Education>;
+}): Promise<Resume> {
+  try {
+    const response = await axios.post(`/resume/${resumeId}/education`, data, {
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(`Error creating education: ${error}`);
+  }
+}
+
+export async function createWorkExperience({
+  resumeId,
+  data,
+}: {
+  resumeId: string;
+  data: Partial<WorkExperience>;
+}): Promise<Resume> {
+  try {
+    const response = await axios.post(
+      `/resume/${resumeId}/workExperience`,
+      data,
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(`Error creating work experience: ${error}`);
+  }
+}
+
+export async function updateBasicInfo({
+  resumeId,
+  data,
+}: {
+  resumeId: string;
+  data: Partial<Resume>;
+}): Promise<Resume> {
+  try {
+    const response = await axios.patch(`/resume/${resumeId}/basic-info`, data, {
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(`Error updating basic info: ${error}`);
+  }
+}
+
+export async function updateWorkExperience({
+  resumeId,
+  workExperienceId,
+  data,
+}: {
+  resumeId: string;
+  workExperienceId: string;
+  data: Partial<WorkExperience>;
+}): Promise<Resume> {
+  try {
+    const response = await axios.patch(
+      `/resume/${resumeId}/workExperience/${workExperienceId}`,
+      data,
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(`Error updating basic info: ${error}`);
+  }
+}
+
+export async function updateEducation({
+  resumeId,
+  educationId,
+  data,
+}: {
+  resumeId: string;
+  educationId: string;
+  data: Partial<Education>;
+}): Promise<Resume> {
+  try {
+    const response = await axios.patch(
+      `/resume/${resumeId}/education/${educationId}`,
+      data,
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(`Error updating basic info: ${error}`);
+  }
+}
+
+export async function deleteResume(resumeId: string): Promise<void> {
+  try {
+    await axios.delete(`/resume/${resumeId}`, {
+      withCredentials: true,
+    });
+  } catch (error) {
+    throw new Error(`Error deleting resume: ${error}`);
   }
 }

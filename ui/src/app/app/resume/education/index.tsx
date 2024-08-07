@@ -87,7 +87,9 @@ function EducationItem({
             className={inputClassName}
             showMonthYearPicker
             dateFormat="MM/yyyy"
-            selected={startDate}
+            selected={
+              !startDate || startDate === "N/A" ? null : new Date(startDate)
+            }
             onChange={(date) => setStartDate(date)}
           />
         </div>
@@ -98,7 +100,7 @@ function EducationItem({
             className={inputClassName}
             showMonthYearPicker
             dateFormat="MM/yyyy"
-            selected={endDate}
+            selected={!endDate || endDate === "N/A" ? null : new Date(endDate)}
             onChange={(date) => setEndDate(date)}
           />
         </div>
@@ -175,7 +177,7 @@ export function Education() {
             />
           );
         })}
-        {testEducations.map((edu, index) => {
+        {session?.user?.userResume?.educations?.map((edu, index) => {
           return (
             <EducationItem
               key={`edu-${index}`}

@@ -6,12 +6,13 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { Session } from "@/client";
+import { Resume, Session } from "@/client";
 import * as apiClient from "@/client";
 
 // Define the shape of the context value
 interface SessionContextValue {
   session: Session | null;
+  setResume: (resume: Resume | null) => void;
   logout: () => void;
   isLoading: boolean;
 }
@@ -31,6 +32,18 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
 }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const setResume = useCallback(
+    (resume: Resume | null) => {
+      if (session && session.user) {
+        setSession({
+          ...session,
+          user: { ...session.user, userResume: resume },
+        });
+      }
+    },
+    [session]
+  );
 
   useEffect(() => {
     const getSession = async () => {
@@ -57,7 +70,7 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
   }, []);
 
   return (
-    <SessionContext.Provider value={{ session, isLoading, logout }}>
+    <SessionContext.Provider value={{ setResume, session, isLoading, logout }}>
       {children}
     </SessionContext.Provider>
   );

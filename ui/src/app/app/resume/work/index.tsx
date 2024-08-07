@@ -89,7 +89,9 @@ function WorkItem({
             className={inputClassName}
             showMonthYearPicker
             dateFormat="MM/yyyy"
-            selected={startDate}
+            selected={
+              !startDate || startDate === "N/A" ? null : new Date(startDate)
+            }
             onChange={(date) => setStartDate(date)}
           />
         </div>
@@ -100,7 +102,7 @@ function WorkItem({
             className={inputClassName}
             showMonthYearPicker
             dateFormat="MM/yyyy"
-            selected={endDate}
+            selected={!endDate || endDate === "N/A" ? null : new Date(endDate)}
             onChange={(date) => setEndDate(date)}
           />
         </div>
@@ -281,7 +283,7 @@ export function Work() {
             />
           );
         })}
-        {testWorkExperiences.map((work, index) => {
+        {session?.user?.userResume?.workExperiences?.map((work, index) => {
           return (
             <WorkItem
               key={`work-${index}`}

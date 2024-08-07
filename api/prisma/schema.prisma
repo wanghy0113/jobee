@@ -32,10 +32,10 @@ model UserResume {
   id String @id @default(cuid())
 
   userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  firstName       String
-  lastName        String
+  firstName       String?
+  lastName        String?
   email           String?
   website         String?
   linkedin        String?
@@ -52,34 +52,34 @@ model UserResume {
 }
 
 model UserWorkExperience {
-  id        String    @id @default(cuid())
+  id        String   @id @default(cuid())
   company   String
   title     String
   location  String?
-  startDate DateTime
-  endDate   DateTime?
+  startDate String?
+  endDate   String?
   contents  String[]
   skills    String[]
 
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
-  userResume   UserResume? @relation(fields: [userResumeId], references: [id])
+  userResume   UserResume? @relation(fields: [userResumeId], references: [id], onDelete: Cascade)
   userResumeId String?
 }
 
 model UserEducation {
-  id        String    @id @default(cuid())
+  id        String   @id @default(cuid())
   school    String
   major     String
   degree    String
-  startDate DateTime
-  endDate   DateTime?
+  startDate String?
+  endDate   String?
   gpa       String?
   awards    String[]
 
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
-  UserResume   UserResume? @relation(fields: [userResumeId], references: [id])
+  UserResume   UserResume? @relation(fields: [userResumeId], references: [id], onDelete: Cascade)
   userResumeId String?
 }
 

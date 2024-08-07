@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE "UserEducation" ALTER COLUMN "endDate" SET DATA TYPE TEXT,
+ALTER COLUMN "startDate" SET DATA TYPE TEXT;
+
+-- AlterTable
+ALTER TABLE "UserWorkExperience" ALTER COLUMN "endDate" SET DATA TYPE TEXT,
+ALTER COLUMN "startDate" SET DATA TYPE TEXT;

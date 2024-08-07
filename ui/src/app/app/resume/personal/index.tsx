@@ -15,7 +15,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { link } from "fs";
+import { useEffect } from "react";
+import { updateBasicInfo } from "@/client";
 
 const formSchema = z.object({
   firstName: z.string().min(0).max(20),
@@ -30,28 +31,57 @@ const formSchema = z.object({
 });
 
 export function Personal() {
-  const { session } = useSession();
+  const { session, setResume } = useSession();
+  console.log("session", session);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      firstName: session?.resume?.firstName || "",
-      lastName: session?.resume?.lastName || "",
-      email: session?.resume?.email || "",
-      website: session?.resume?.website || "",
-      linkedin: session?.resume?.linkedin || "",
-      github: session?.resume?.github || "",
-      phone: session?.resume?.phone || "",
-      address: session?.resume?.address || "",
-      summary: session?.resume?.summary || "",
+      firstName: session?.user?.userResume?.firstName || "",
+      lastName: session?.user?.userResume?.lastName || "",
+      email: session?.user?.userResume?.email || "",
+      website: session?.user?.userResume?.website || "",
+      linkedin: session?.user?.userResume?.linkedin || "",
+      github: session?.user?.userResume?.github || "",
+      phone: session?.user?.userResume?.phone || "",
+      address: session?.user?.userResume?.address || "",
+      summary: session?.user?.userResume?.summary || "",
     },
   });
+
+  const { reset } = form;
+
+  // Update form values when session changes
+  useEffect(() => {
+    reset({
+      firstName: session?.user?.userResume?.firstName || "",
+      lastName: session?.user?.userResume?.lastName || "",
+      email: session?.user?.userResume?.email || "",
+      website: session?.user?.userResume?.website || "",
+      linkedin: session?.user?.userResume?.linkedin || "",
+      github: session?.user?.userResume?.github || "",
+      phone: session?.user?.userResume?.phone || "",
+      address: session?.user?.userResume?.address || "",
+      summary: session?.user?.userResume?.summary || "",
+    });
+  }, [session, reset]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
-    console.log(values);
+    if (!session?.user?.userResume?.id) {
+      throw new Error("No resume ID found");
+    }
+    updateBasicInfo({
+      data: values,
+      resumeId: session?.user?.userResume?.id,
+    }).then((resume) => {
+      console.log("updated resume", resume);
+      setResume(resume);
+    });
   }
+
+  const isFormChanged = form.formState.isDirty;
 
   return (
     <div>
@@ -161,11 +191,24 @@ export function Personal() {
               </FormItem>
             )}
           />
-          <Button size={"sm"} type="submit">
+          <Button size={"sm"} type="submit" disabled={!isFormChanged}>
             Save
           </Button>
         </form>
       </Form>
     </div>
   );
+}
+function reset(arg0: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  website: string;
+  linkedin: string;
+  github: string;
+  phone: string;
+  address: string;
+  summary: string;
+}) {
+  throw new Error("Function not implemented.");
 }

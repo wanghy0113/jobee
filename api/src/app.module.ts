@@ -18,6 +18,8 @@ import { jwtConstants } from './auth/constants'
 import { UserController } from './user/user.controller'
 import { JobModule } from './job/job.module'
 import { GoogleAuthService } from './auth/google-auth-service'
+import { ResumeController } from './resume/resume.controller'
+import { ResumeModule } from './resume/resume.module'
 
 @Module({
   imports: [
@@ -28,6 +30,7 @@ import { GoogleAuthService } from './auth/google-auth-service'
       signOptions: { expiresIn: '60s' },
     }),
     JobModule,
+    ResumeModule,
   ],
   controllers: [
     AppController,
@@ -35,6 +38,7 @@ import { GoogleAuthService } from './auth/google-auth-service'
     OrganizationController,
     AuthController,
     UserController,
+    ResumeController,
   ],
   providers: [
     AppService,
