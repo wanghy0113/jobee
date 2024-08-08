@@ -1,12 +1,17 @@
 "use client";
 
 import { useSession } from "@/app/context/session-context";
-import { Education as IEducation } from "@/client";
+import {
+  Education as IEducation,
+  updateEducation,
+  createEducation,
+  deleteEducation,
+} from "@/client";
 
 import { Button } from "@/components/ui/button";
 import { Input, inputClassName } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DatePicker from "react-datepicker";
 
 import "react-datepicker/dist/react-datepicker.css";
@@ -17,7 +22,7 @@ function EducationItem({
   onDelete,
 }: {
   education: Partial<IEducation>;
-  onSave: (education: IEducation) => void;
+  onSave: (education: Omit<IEducation, "id">) => void;
   onDelete: () => void;
 }) {
   const [school, setSchool] = useState(education.school);
@@ -26,6 +31,15 @@ function EducationItem({
   const [startDate, setStartDate] = useState(education.startDate);
   const [endDate, setEndDate] = useState(education.endDate);
   const [gpa, setGpa] = useState(education.gpa);
+
+  useEffect(() => {
+    setSchool(education.school);
+    setMajor(education.major);
+    setDegree(education.degree);
+    setStartDate(education.startDate);
+    setEndDate(education.endDate);
+    setGpa(education.gpa);
+  }, [education]);
 
   const isChanged =
     school !== education.school ||
@@ -90,7 +104,7 @@ function EducationItem({
             selected={
               !startDate || startDate === "N/A" ? null : new Date(startDate)
             }
-            onChange={(date) => setStartDate(date)}
+            onChange={(date) => setStartDate(date?.toLocaleDateString())}
           />
         </div>
         <div className="max-w-96 flex flex-col space-y-2">
@@ -101,7 +115,7 @@ function EducationItem({
             showMonthYearPicker
             dateFormat="MM/yyyy"
             selected={!endDate || endDate === "N/A" ? null : new Date(endDate)}
-            onChange={(date) => setEndDate(date)}
+            onChange={(date) => setEndDate(date?.toLocaleDateString())}
           />
         </div>
       </div>
@@ -113,11 +127,11 @@ function EducationItem({
           onClick={() =>
             onSave({
               school: school || "",
-              major,
-              degree,
-              startDate,
-              endDate,
-              gpa,
+              major: major || "",
+              degree: degree || "",
+              startDate: startDate,
+              endDate: endDate,
+              gpa: gpa || "",
             })
           }
           disabled={!isChanged || !isValidForm}
@@ -132,24 +146,68 @@ function EducationItem({
   );
 }
 
-const testEducations: IEducation[] = [
-  {
-    school: "University of California, Berkeley",
-    major: "Computer Science",
-    degree: "Bachelor of Science",
-    startDate: new Date("2015-08-01"),
-    endDate: new Date("2019-05-01"),
-    gpa: "3.8",
-    awards: ["Dean's List", "Graduated with Honors"],
-  },
-];
-
 export function Education() {
-  const { session } = useSession();
+  const { session, setResume } = useSession();
 
   const [addingEducations, setAddingEducations] = useState<
     Partial<IEducation>[]
   >([]);
+
+  const onSave = (educationId: string, updated: Omit<IEducation, "id">) => {
+    if (!session?.user?.userResume) {
+      return;
+    }
+
+    updateEducation({
+      resumeId: session.user.userResume.id,
+      educationId,
+      data: {
+        ...updated,
+      },
+    }).then((resume) => {
+      setResume(resume);
+    });
+  };
+
+  const onSaveNew = (education: Omit<IEducation, "id">) => {
+    if (!session?.user?.userResume) {
+      return;
+    }
+
+    createEducation({
+      resumeId: session.user.userResume.id,
+      data: {
+        ...education,
+      },
+    }).then((resume) => {
+      setResume(resume);
+    });
+  };
+
+  const deleteAddingEducation = (index: number) => {
+    const newEdu = [...addingEducations];
+    newEdu.splice(index, 1);
+    setAddingEducations(newEdu);
+  };
+
+  const sortedEducations = useMemo(
+    () =>
+      session?.user?.userResume?.educations?.sort((a, b) => {
+        if (!a.startDate && !b.startDate) {
+          return a.school?.localeCompare(b.school || "") || 0;
+        }
+        if (!a.startDate) {
+          return 1;
+        }
+        if (!b.startDate) {
+          return -1;
+        }
+        return (
+          new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+        );
+      }),
+    [session?.user?.userResume?.educations]
+  );
 
   return (
     <div className="flex flex-col space-y-4 py-2">
@@ -168,22 +226,36 @@ export function Education() {
             <EducationItem
               key={`adding-edu-${index}`}
               education={edu}
-              onSave={() => {}}
+              onSave={(create) => {
+                onSaveNew(create);
+                deleteAddingEducation(index);
+              }}
               onDelete={() => {
-                const newEdu = [...addingEducations];
-                newEdu.splice(index, 1);
-                setAddingEducations(newEdu);
+                deleteAddingEducation(index);
               }}
             />
           );
         })}
-        {session?.user?.userResume?.educations?.map((edu, index) => {
+        {sortedEducations?.map((edu, index) => {
           return (
             <EducationItem
               key={`edu-${index}`}
               education={edu}
-              onSave={() => {}}
-              onDelete={() => {}}
+              onSave={(updated) => {
+                onSave(edu.id, updated);
+              }}
+              onDelete={() => {
+                if (!session?.user?.userResume) {
+                  return;
+                }
+
+                deleteEducation({
+                  resumeId: session.user.userResume.id,
+                  educationId: edu.id,
+                }).then((resume) => {
+                  setResume(resume);
+                });
+              }}
             />
           );
         })}

@@ -1,17 +1,22 @@
 "use client";
 
 import { useSession } from "@/app/context/session-context";
-import { WorkExperience as IWorkExperience } from "@/client";
+import {
+  WorkExperience as IWorkExperience,
+  updateWorkExperience,
+  createWorkExperience,
+  deleteWorkExperience,
+} from "@/client";
 
 import { Button } from "@/components/ui/button";
 import { Input, inputClassName } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlusCircleIcon, TrashIcon } from "@heroicons/react/16/solid";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DatePicker from "react-datepicker";
 
 import "react-datepicker/dist/react-datepicker.css";
-import { SkillItem } from "../skills";
+import { TextArrayItem } from "../common/text-array-editor";
 import { arraysEqual } from "@/lib/utils";
 
 function WorkItem({
@@ -20,7 +25,7 @@ function WorkItem({
   onDelete,
 }: {
   work: Partial<IWorkExperience>;
-  onSave: (work: IWorkExperience) => void;
+  onSave: (work: Omit<IWorkExperience, "id">) => void;
   onDelete: () => void;
 }) {
   const [company, setCompany] = useState(work.company);
@@ -32,6 +37,16 @@ function WorkItem({
   const [endDate, setEndDate] = useState(work.endDate);
 
   const [isAddingSkill, setIsAddingSkill] = useState(false);
+
+  useEffect(() => {
+    setCompany(work.company);
+    setTitle(work.title);
+    setLocation(work.location);
+    setContents(work.contents || []);
+    setSkills(work.skills);
+    setStartDate(work.startDate);
+    setEndDate(work.endDate);
+  }, [work]);
 
   const isChanged =
     company !== work.company ||
@@ -165,7 +180,7 @@ function WorkItem({
         </div>
         <div className="flex flex-wrap w-full gap-1">
           {skills?.map((skill, index) => (
-            <SkillItem
+            <TextArrayItem
               key={`skill-${index}`}
               shouldFocus={isAddingSkill && index === skills.length - 1}
               onChange={(text) => {
@@ -231,31 +246,69 @@ function WorkItem({
   );
 }
 
-const testWorkExperiences: IWorkExperience[] = [
-  {
-    company: "Google",
-    title: "Software Engineer",
-    location: "Mountain View, CA",
-    startDate: new Date("2019-01-01"),
-    endDate: new Date("2021-01-01"),
-    contents: ["Worked on Google Search", "Worked on Google Maps"],
-    skills: ["React", "TypeScript", "JavaScript"],
-  },
-  {
-    company: "Facebook",
-    title: "Software Engineer",
-    location: "Menlo Park, CA",
-    startDate: new Date("2021-01-01"),
-    endDate: new Date("2022-01-01"),
-    contents: ["Worked on Facebook Feed", "Worked on Facebook Marketplace"],
-    skills: ["React", "TypeScript", "JavaScript"],
-  },
-];
-
 export function Work() {
-  const { session } = useSession();
+  const { session, setResume } = useSession();
 
   const [addingWork, setAddingWork] = useState<Partial<IWorkExperience>[]>([]);
+
+  const onSave = (
+    workExperienceId: string,
+    updated: Omit<IWorkExperience, "id">
+  ) => {
+    if (!session?.user?.userResume) {
+      return;
+    }
+
+    updateWorkExperience({
+      resumeId: session.user.userResume.id,
+      workExperienceId,
+      data: {
+        ...updated,
+      },
+    }).then((resume) => {
+      setResume(resume);
+    });
+  };
+
+  const onSaveNew = (workExperience: Omit<IWorkExperience, "id">) => {
+    if (!session?.user?.userResume) {
+      return;
+    }
+
+    createWorkExperience({
+      resumeId: session.user.userResume.id,
+      data: {
+        ...workExperience,
+      },
+    }).then((resume) => {
+      setResume(resume);
+    });
+  };
+
+  const deleteAddingWork = (index: number) => {
+    const newWork = [...addingWork];
+    newWork.splice(index, 1);
+    setAddingWork(newWork);
+  };
+
+  const sortedWork = useMemo(
+    () =>
+      session?.user?.userResume?.workExperiences?.sort((a, b) => {
+        if (!a.startDate && !b.startDate) {
+          return a.company?.localeCompare(b.company || "") || 0;
+        }
+        if (!a.startDate) {
+          return 1;
+        }
+        if (!b.startDate) {
+          return -1;
+        }
+        return (
+          new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+        );
+      }),
+    [session?.user?.userResume?.workExperiences]
+  );
 
   return (
     <div className="flex flex-col space-y-4 py-2">
@@ -274,22 +327,34 @@ export function Work() {
             <WorkItem
               key={`adding-work-${index}`}
               work={work}
-              onSave={() => {}}
+              onSave={(create) => {
+                onSaveNew(create);
+                deleteAddingWork(index);
+              }}
               onDelete={() => {
-                const newWork = [...addingWork];
-                newWork.splice(index, 1);
-                setAddingWork(newWork);
+                deleteAddingWork(index);
               }}
             />
           );
         })}
-        {session?.user?.userResume?.workExperiences?.map((work, index) => {
+        {sortedWork?.map((work, index) => {
           return (
             <WorkItem
               key={`work-${index}`}
               work={work}
-              onSave={() => {}}
-              onDelete={() => {}}
+              onSave={(update) => onSave(work.id!, update)}
+              onDelete={() => {
+                if (!session?.user?.userResume) {
+                  return;
+                }
+
+                deleteWorkExperience({
+                  resumeId: session.user.userResume.id,
+                  workExperienceId: work.id!,
+                }).then((resume) => {
+                  setResume(resume);
+                });
+              }}
             />
           );
         })}

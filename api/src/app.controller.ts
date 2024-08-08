@@ -11,14 +11,12 @@ export class AppController {
     @Body() body: { jobDescription: string },
   ): Promise<ParamsGenAgentResult> {
     const params = this.appService.generateParams(body.jobDescription)
-    console.log(params)
     return params
   }
 
   @Post('/search/gen-query')
   generateQuery(@Body() body: { jobDescription: string }): Promise<string> {
     const query = this.appService.generateQuery(body.jobDescription)
-    console.log(query)
     return query
   }
 

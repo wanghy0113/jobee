@@ -35,7 +35,6 @@ export class JobController {
     @Body('jobTitle') jobTitle: string,
     @Body('jobLocation') jobLocation: string,
   ) {
-    console.log('>>>>>request user', req.user.id)
     if (!req.user.id) {
       throw new UnauthorizedException('User ID is required')
     }
@@ -70,7 +69,6 @@ export class JobController {
     @Request() req,
     @Param('googleJobId') googleJobId: string,
   ) {
-    console.log('deleteSavedJob', req.user.id, googleJobId)
     await this.jobService.deleteSavedJob(req.user.id, googleJobId)
 
     return {

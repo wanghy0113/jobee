@@ -78,6 +78,42 @@ export class ResumeController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Delete('/:resumeId/education/:educationId')
+  async deleteEducation(
+    @Request() req,
+    @Param('resumeId') resumeId: string,
+    @Param('educationId') educationId: string,
+  ) {
+    if (!req.user) {
+      throw new UnauthorizedException('request unauthorized')
+    }
+
+    return await this.resumesService.deleteEducation({
+      userId: req.user.id,
+      resumeId,
+      educationId,
+    })
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('/:resumeId/workExperience/:workExperienceId')
+  async deleteWorkExperience(
+    @Request() req,
+    @Param('resumeId') resumeId: string,
+    @Param('workExperienceId') workExperienceId: string,
+  ) {
+    if (!req.user) {
+      throw new UnauthorizedException('request unauthorized')
+    }
+
+    return await this.resumesService.deleteWorkExperience({
+      userId: req.user.id,
+      resumeId,
+      workExperienceId,
+    })
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('/:resumeId')
   async getResume(@Request() req, @Param('resumeId') resumeId: string) {
     if (!req.user) {

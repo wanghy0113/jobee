@@ -71,7 +71,6 @@ export class UserProfileSummarizationAgent {
         const output = await this.chain.invoke({ profile })
         const startingIndex = output.indexOf('{')
         const jsonString = output.substring(startingIndex)
-        console.log(jsonString)
         const result = plainToInstance(
           UserProfileSummarizationResult,
           JSON.parse(jsonString),

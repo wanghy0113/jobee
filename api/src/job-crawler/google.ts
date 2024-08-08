@@ -211,8 +211,6 @@ export class GoogleJobsCrawler {
         location,
         companyDomain,
       )
-      console.log(company, location, companyDomain)
-      console.log(companyData)
 
       const jobApplyEntries: { url: string; platform: string }[] = []
       for (const applyEntry of applyEntries) {

@@ -28,7 +28,8 @@ export interface JobSearch {
 }
 
 export interface Education {
-  school: string;
+  id: string;
+  school?: string;
   major?: string;
   degree?: string;
   startDate?: Date | string | null;
@@ -38,8 +39,9 @@ export interface Education {
 }
 
 export interface WorkExperience {
-  company: string;
-  title: string;
+  id: string;
+  company?: string;
+  title?: string;
   location?: string;
   startDate?: Date | string | null;
   endDate?: Date | string | null;
@@ -271,6 +273,46 @@ export async function createWorkExperience({
     return response.data;
   } catch (error) {
     throw new Error(`Error creating work experience: ${error}`);
+  }
+}
+
+export async function deleteEducation({
+  resumeId,
+  educationId,
+}: {
+  resumeId: string;
+  educationId: string;
+}): Promise<Resume> {
+  try {
+    const response = await axios.delete(
+      `/resume/${resumeId}/education/${educationId}`,
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(`Error deleting education: ${error}`);
+  }
+}
+
+export async function deleteWorkExperience({
+  resumeId,
+  workExperienceId,
+}: {
+  resumeId: string;
+  workExperienceId: string;
+}): Promise<Resume> {
+  try {
+    const response = await axios.delete(
+      `/resume/${resumeId}/workExperience/${workExperienceId}`,
+      {
+        withCredentials: true,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(`Error deleting work experience: ${error}`);
   }
 }
 

@@ -117,46 +117,6 @@ export class ResumeService {
         workExperiences: true,
       },
     })
-
-    // const createEducations =
-    //   educations?.length > 0
-    //     ? {
-    //         createMany: {
-    //           data: educations.map((education) => {
-    //             return {
-    //               ...education,
-    //             }
-    //           }),
-    //         },
-    //       }
-    //     : undefined
-    // const createWorkExperiences =
-    //   workExperiences?.length > 0
-    //     ? {
-    //         createMany: {
-    //           data: workExperiences.map((workExperience) => {
-    //             return {
-    //               ...workExperience,
-    //             }
-    //           }),
-    //         },
-    //       }
-    //     : undefined
-
-    // console.log('creating resume, educations', createEducations)
-    // console.log('creating resume, workExperiences', createWorkExperiences)
-    // return await this.prisma.userResume.create({
-    //   data: {
-    //     userId,
-    //     educations: createEducations,
-    //     workExperiences: createWorkExperiences,
-    //     ...basicInfo,
-    //   },
-    //   include: {
-    //     educations: true,
-    //     workExperiences: true,
-    //   },
-    // })
   }
 
   async getResume({ resumeId, userId }: { resumeId: string; userId: string }) {
@@ -299,6 +259,62 @@ export class ResumeService {
               id: workExperienceId,
             },
             data,
+          },
+        },
+      },
+      include: {
+        educations: true,
+        workExperiences: true,
+      },
+    })
+  }
+
+  async deleteEducation({
+    userId,
+    resumeId,
+    educationId,
+  }: {
+    userId: string
+    resumeId: string
+    educationId: string
+  }) {
+    return await this.prisma.userResume.update({
+      where: {
+        userId,
+        id: resumeId,
+      },
+      data: {
+        educations: {
+          delete: {
+            id: educationId,
+          },
+        },
+      },
+      include: {
+        educations: true,
+        workExperiences: true,
+      },
+    })
+  }
+
+  async deleteWorkExperience({
+    userId,
+    resumeId,
+    workExperienceId,
+  }: {
+    userId: string
+    resumeId: string
+    workExperienceId: string
+  }) {
+    return await this.prisma.userResume.update({
+      where: {
+        userId,
+        id: resumeId,
+      },
+      data: {
+        workExperiences: {
+          delete: {
+            id: workExperienceId,
           },
         },
       },

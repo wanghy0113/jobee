@@ -8,8 +8,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
       jwtFromRequest: (req: any) => {
-        console.log('req?.cookies?.sessionToken', req?.cookies?.sessionToken)
-        console.log('req?.headers?.authorization', req?.headers?.authorization)
         return (
           req?.cookies?.sessionToken ||
           req?.headers?.authorization?.split(' ')[1]

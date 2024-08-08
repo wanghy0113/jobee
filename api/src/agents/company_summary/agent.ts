@@ -52,10 +52,8 @@ export class CompanySummaryAgent {
         const output = await this.chain.invoke({
           job_description: jobDescription,
         })
-        console.log(output)
         const startingIndex = output.indexOf('{')
         const jsonString = output.substring(startingIndex)
-        console.log(jsonString)
         const result = plainToInstance(
           CompanySummaryAgentResult,
           JSON.parse(jsonString),

@@ -177,7 +177,6 @@ export default function Home() {
             ></Textarea>
             <Button
               onClick={() => {
-                console.log("searching", jobTitle, jobLocation);
                 if (!jobTitle || !jobLocation) {
                   return;
                 }

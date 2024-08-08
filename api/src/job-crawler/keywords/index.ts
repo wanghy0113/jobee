@@ -688,10 +688,6 @@ const keywordsMap = {
   creativeJob: creativeJobKeywords,
 }
 
-// Example usage:
-const jobType = getJobType('Software Engineer')
-console.log(jobType) // Output: techJob
-
 export function findKeywordsForJob(jobTitle: string, jobDescription: string) {
   const jobTypes = getJobType(jobTitle)
   jobDescription = jobDescription.toLowerCase()
