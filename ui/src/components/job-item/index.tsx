@@ -6,9 +6,10 @@ import cn from "classnames";
 import { JobBoardLabel } from "./job-board-label";
 import { ActionLabel } from "../ui/action-label";
 import { JobLink } from "../job-link";
-import { Button } from "../ui/button";
-import { useMemo, useRef, useState } from "react";
 import StarIcon from "@heroicons/react/16/solid/StarIcon";
+import { useSession } from "@/app/context/session-context";
+import { getMatchedSkills } from "@/app/app/search/job-matching";
+import { useMemo } from "react";
 
 export interface JobCardProps {
   job: Job;
@@ -54,11 +55,19 @@ export const JobItem = ({
   onClickSkill,
   onStarIconClick,
 }: JobCardProps) => {
-  // const ref = useRef<HTMLDivElement>(null);
-  // const isHovering = useMemo(() => {
-  //   if (!ref.current) return false;
-  //   return ref.current.matches(":hover");
-  // }
+  const { session } = useSession();
+
+  const matchingSkills = useMemo(() => {
+    if (!session?.user?.userResume?.skills) {
+      return [];
+    }
+
+    return getMatchedSkills(job.skills || [], session.user.userResume.skills);
+  }, [job.skills, session?.user?.userResume?.skills]);
+
+  const nonMatchingSkills = useMemo(() => {
+    return job.skills?.filter((skill) => !matchingSkills.includes(skill)) || [];
+  }, [job.skills, matchingSkills]);
 
   const sortedApplyEntries = job.applyEntries.sort((a, b) => {
     if (isPlatformCompanyWebsite(a.platform, job.company.name)) {
@@ -166,8 +175,19 @@ export const JobItem = ({
       </div>
 
       <div className="flex flex-wrap grow min-w-72 h-fit">
-        {job.skills?.map((skill, index) => (
+        {matchingSkills.map((skill, index) => (
           <ActionLabel
+            className="bg-blue-300"
+            highlighted={highlightedSkills?.includes(skill)}
+            key={index}
+            onClick={() => onClickSkill(skill)}
+          >
+            {skill}
+          </ActionLabel>
+        ))}
+        {nonMatchingSkills.map((skill, index) => (
+          <ActionLabel
+            className={cn({})}
             highlighted={highlightedSkills?.includes(skill)}
             key={index}
             onClick={() => onClickSkill(skill)}
